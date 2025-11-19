@@ -1,39 +1,90 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Globe } from 'lucide-react';
-import { Box, Text, Flex } from '@radix-ui/themes';
+import { Globe, X } from 'lucide-react';
+import { Box, Text, Flex, IconButton } from '@radix-ui/themes';
 
-interface ApiNodeData {
+/**
+ * HTTP methods supported by the API node
+ */
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+
+/**
+ * Data structure for the API node
+ */
+export interface ApiNodeData {
   label: string;
   customName?: string;
-  httpMethod?: 'GET' | 'POST';
   url?: string;
+  method?: HttpMethod;
   requestBody?: Record<string, string>;
+  onDelete?: () => void;
 }
 
-const ApiNode = ({ data }: { data: ApiNodeData }) => {
+/**
+ * Props for the ApiNode component
+ */
+export interface ApiNodeProps {
+  data: ApiNodeData;
+  id: string;
+}
 
+/**
+ * ApiNode - Represents an HTTP API call in the workflow
+ * Makes external API requests and processes responses
+ */
+export const ApiNode: React.FC<ApiNodeProps> = ({ data, id }) => {
   return (
     <Box
       px="4"
       py="3"
+      position="relative"
       style={{
-        boxShadow: 'var(--shadow-2)',
-        borderRadius: 'var(--radius-3)',
-        backgroundColor: '#a855f7',
+        backgroundColor: 'var(--purple-9)',
         color: 'white',
-        border: '2px solid #9333ea',
+        borderRadius: 'var(--radius-3)',
+        boxShadow: 'var(--shadow-2)',
+        border: '2px solid var(--purple-10)',
         minWidth: '150px',
-        position: 'relative',
       }}
     >
+      {/* Delete button */}
+      {data.onDelete && (
+        <Box
+          position="absolute"
+          style={{
+            top: '-8px',
+            right: '-8px',
+          }}
+        >
+          <IconButton
+            size="1"
+            color="red"
+            variant="solid"
+            radius="full"
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onDelete?.();
+            }}
+            title="Delete node"
+            style={{
+              width: '20px',
+              height: '20px',
+              padding: 0,
+              border: '2px solid white',
+            }}
+          >
+            <X size={12} />
+          </IconButton>
+        </Box>
+      )}
+
       <Handle
         type="target"
         position={Position.Left}
         style={{
           width: '12px',
           height: '12px',
-          backgroundColor: '#9333ea',
+          backgroundColor: 'var(--purple-10)',
           border: '2px solid white',
         }}
       />
@@ -45,7 +96,7 @@ const ApiNode = ({ data }: { data: ApiNodeData }) => {
         </Text>
       </Flex>
 
-      <Text size="1" style={{ opacity: 0.9, textAlign: 'center' }}>
+      <Text size="1" align="center" style={{ opacity: 0.9 }}>
         Click to configure API call
       </Text>
 
@@ -55,12 +106,10 @@ const ApiNode = ({ data }: { data: ApiNodeData }) => {
         style={{
           width: '12px',
           height: '12px',
-          backgroundColor: '#9333ea',
+          backgroundColor: 'var(--purple-10)',
           border: '2px solid white',
         }}
       />
     </Box>
   );
 };
-
-export default ApiNode;

@@ -1,8 +1,12 @@
+import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
 import { Flex, Heading, Text, Link } from '@radix-ui/themes';
 
-const NotFound = () => {
+/**
+ * NotFound - 404 error page
+ * Displayed when users attempt to access a non-existent route
+ */
+export const NotFound: React.FC = () => {
   const location = useLocation();
 
   useEffect(() => {
@@ -25,5 +29,3 @@ const NotFound = () => {
     </Flex>
   );
 };
-
-export default NotFound;

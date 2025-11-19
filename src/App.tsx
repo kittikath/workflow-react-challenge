@@ -1,9 +1,14 @@
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Index from './pages/Index';
-import NotFound from './pages/NotFound';
 import { Theme } from '@radix-ui/themes';
+import { Index } from './pages/Index';
+import { NotFound } from './pages/NotFound';
 
-const App = () => (
+/**
+ * App - Root application component
+ * Sets up routing and theming for the entire application
+ */
+export const App: React.FC = () => (
   <Theme accentColor="jade" radius="medium">
     <BrowserRouter>
       <Routes>
@@ -13,5 +18,3 @@ const App = () => (
     </BrowserRouter>
   </Theme>
 );
-
-export default App;

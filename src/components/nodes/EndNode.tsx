@@ -1,29 +1,81 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Square } from 'lucide-react';
-import { Box, Text, Flex } from '@radix-ui/themes';
+import { Square, X } from 'lucide-react';
+import { Box, Text, Flex, IconButton } from '@radix-ui/themes';
 
-const EndNode = ({ data }: { data: { label?: string } }) => {
+/**
+ * Data structure for the End node
+ */
+export interface EndNodeData {
+  label: string;
+  onDelete?: () => void;
+}
+
+/**
+ * Props for the EndNode component
+ */
+export interface EndNodeProps {
+  data: EndNodeData;
+  id: string;
+}
+
+/**
+ * EndNode - Represents the termination point of a workflow
+ * This node marks the end of the workflow and has only an input connection
+ */
+export const EndNode: React.FC<EndNodeProps> = ({ data, id }) => {
   return (
     <Box
       px="4"
       py="3"
+      position="relative"
       style={{
-        boxShadow: 'var(--shadow-2)',
-        borderRadius: 'var(--radius-3)',
-        backgroundColor: '#ef4444',
+        backgroundColor: 'var(--red-9)',
         color: 'white',
-        border: '2px solid #dc2626',
+        borderRadius: 'var(--radius-3)',
+        boxShadow: 'var(--shadow-2)',
+        border: '2px solid var(--red-10)',
         minWidth: '120px',
       }}
     >
+      {/* Delete button */}
+      {data.onDelete && (
+        <Box
+          position="absolute"
+          style={{
+            top: '-8px',
+            right: '-8px',
+          }}
+        >
+          <IconButton
+            size="1"
+            color="red"
+            variant="solid"
+            radius="full"
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onDelete?.();
+            }}
+            title="Delete node"
+            style={{
+              width: '20px',
+              height: '20px',
+              padding: 0,
+              border: '2px solid white',
+            }}
+          >
+            <X size={12} />
+          </IconButton>
+        </Box>
+      )}
+
       <Handle
         type="target"
         position={Position.Left}
         style={{
           width: '12px',
           height: '12px',
-          backgroundColor: '#dc2626',
+          backgroundColor: 'var(--red-10)',
           border: '2px solid white',
         }}
       />
@@ -31,11 +83,9 @@ const EndNode = ({ data }: { data: { label?: string } }) => {
       <Flex align="center" gap="2" justify="center">
         <Square size={16} fill="white" />
         <Text size="2" weight="bold">
-          End
+          {data.label}
         </Text>
       </Flex>
     </Box>
   );
 };
-
-export default EndNode;

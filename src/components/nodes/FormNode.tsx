@@ -1,44 +1,95 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { FileText } from 'lucide-react';
-import { Box, Text, Flex } from '@radix-ui/themes';
+import { FileText, X } from 'lucide-react';
+import { Box, Text, Flex, IconButton } from '@radix-ui/themes';
 
-interface FormField {
+/**
+ * Represents a single field in a form
+ */
+export interface FormField {
   id: string;
   name: string;
-  type: 'text' | 'email' | 'number';
+  label: string;
+  type: 'string' | 'number' | 'dropdown' | 'checkbox';
   required: boolean;
+  options?: string[]; // For dropdown type
 }
 
-interface FormNodeData {
+/**
+ * Data structure for the Form node
+ */
+export interface FormNodeData {
   label: string;
   customName?: string;
   fields?: FormField[];
+  onDelete?: () => void;
 }
 
-const FormNode = ({ data }: { data: FormNodeData }) => {
+/**
+ * Props for the FormNode component
+ */
+export interface FormNodeProps {
+  data: FormNodeData;
+  id: string;
+}
 
+/**
+ * FormNode - Represents a user input form in the workflow
+ * Collects data from users through configurable fields
+ */
+export const FormNode: React.FC<FormNodeProps> = ({ data, id }) => {
   return (
     <Box
       px="4"
       py="3"
+      position="relative"
       style={{
-        boxShadow: 'var(--shadow-2)',
-        borderRadius: 'var(--radius-3)',
-        backgroundColor: '#3b82f6',
+        backgroundColor: 'var(--blue-9)',
         color: 'white',
-        border: '2px solid #2563eb',
+        borderRadius: 'var(--radius-3)',
+        boxShadow: 'var(--shadow-2)',
+        border: '2px solid var(--blue-10)',
         minWidth: '150px',
-        position: 'relative',
       }}
     >
+      {/* Delete button */}
+      {data.onDelete && (
+        <Box
+          position="absolute"
+          style={{
+            top: '-8px',
+            right: '-8px',
+          }}
+        >
+          <IconButton
+            size="1"
+            color="red"
+            variant="solid"
+            radius="full"
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onDelete?.();
+            }}
+            title="Delete node"
+            style={{
+              width: '20px',
+              height: '20px',
+              padding: 0,
+              border: '2px solid white',
+            }}
+          >
+            <X size={12} />
+          </IconButton>
+        </Box>
+      )}
+
       <Handle
         type="target"
         position={Position.Left}
         style={{
           width: '12px',
           height: '12px',
-          backgroundColor: '#2563eb',
+          backgroundColor: 'var(--blue-10)',
           border: '2px solid white',
         }}
       />
@@ -50,10 +101,10 @@ const FormNode = ({ data }: { data: FormNodeData }) => {
         </Text>
       </Flex>
 
-      <Text size="1" style={{ opacity: 0.9, textAlign: 'center' }}>
-        {data.fields && data.fields.length > 0 
-          ? `${data.fields.length} field${data.fields.length > 1 ? 's' : ''} configured`
-          : 'Click to configure form fields'}
+      <Text size="1" align="center" style={{ opacity: 0.9 }}>
+        {data.fields && data.fields.length > 0
+          ? `${data.fields.length} field${data.fields.length !== 1 ? 's' : ''}`
+          : 'Click to add fields'}
       </Text>
 
       <Handle
@@ -62,12 +113,10 @@ const FormNode = ({ data }: { data: FormNodeData }) => {
         style={{
           width: '12px',
           height: '12px',
-          backgroundColor: '#2563eb',
+          backgroundColor: 'var(--blue-10)',
           border: '2px solid white',
         }}
       />
     </Box>
   );
 };
-
-export default FormNode;
