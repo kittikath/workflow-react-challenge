@@ -67,7 +67,6 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, id }) => {
           </IconButton>
         </Box>
       )}
-
       <Flex align="center" gap="2" justify="center">
         <Play size={16} fill="white" />
         <Text size="2" weight="bold">
@@ -85,6 +84,14 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, id }) => {
           border: '2px solid white',
         }}
       />
+      <Box 
+        position="absolute"
+        style={{
+          bottom: '-20px',
+          left: '0px',
+        }}>
+        <Text size="1" weight="light" style={{ opacity: 0.7, color: 'black'}}>{id}</Text>
+      </Box>
     </Box>
   );
 };

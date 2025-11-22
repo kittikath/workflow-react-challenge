@@ -30,7 +30,7 @@ import {
   Badge,
   Callout,
 } from '@radix-ui/themes';
-import { Save, X, Plus, Trash2, AlertCircle, Info } from 'lucide-react';
+import { Save, X, Plus, Trash2, AlertCircle, Info, RefreshCw } from 'lucide-react';
 
 import { StartNode } from './nodes/StartNode';
 import { FormNode, FormField } from './nodes/FormNode';
@@ -44,6 +44,8 @@ import type { ApiNodeData } from './nodes/ApiNode';
 import type { ConditionalNodeData } from './nodes/ConditionalNode';
 import type { StartNodeData } from './nodes/StartNode';
 import type { EndNodeData } from './nodes/EndNode';
+import { buildError, minConnections, ValidationError } from '@/utils/validation';
+import { capitalize, pluralize } from '@/utils/helpers';
 
 const nodeTypes = {
   start: StartNode,
@@ -103,48 +105,91 @@ export type WorkflowNodeData =
   | EndNodeData;
 
 /**
- * Validation error structure
- */
-export interface ValidationError {
-  id: string;
-  type: 'error';
-  message: string;
-  nodeId?: string;
-}
-
-/**
  * WorkflowEditor - Main component for building and editing workflows
  * Provides a visual canvas for creating workflows with nodes and connections
  */
 export const WorkflowEditor: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [workflowErrors, setWorkflowErrors] = useState<string[]>([]);
+  const [workflowErrors, setWorkflowErrors] = useState<ValidationError[]>([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
 
-  // Static validation errors for demonstration
-  const validationErrors: ValidationError[] = [
-    {
-      id: '1',
-      type: 'error',
-      message: 'Workflow must have exactly one Start block',
-      nodeId: undefined,
-    },
-    {
-      id: '2',
-      type: 'error',
-      message: 'Form block "User Info" has no fields configured',
-      nodeId: 'node_1',
-    },
-    {
-      id: '3',
-      type: 'error',
-      message: 'Conditional block has no connections',
-      nodeId: 'node_2',
-    },
-  ];
+  // // Static validation errors for demonstration
+  // const validationErrors: ValidationError[] = [
+  //   {
+  //     id: '1',
+  //     type: 'error',
+  //     message: 'Workflow must have exactly one Start block',
+  //     nodeId: undefined,
+  //   },
+  //   {
+  //     id: '2',
+  //     type: 'error',
+  //     message: 'Form block "User Info" has no fields configured',
+  //     nodeId: 'node_1',
+  //   },
+  //   {
+  //     id: '3',
+  //     type: 'error',
+  //     message: 'Conditional block has no connections',
+  //     nodeId: 'node_2',
+  //   },
+  // ];
+
+  const validateWorkflow = useCallback(() => {
+    const errors: ValidationError[] = [];
+
+    const startNodes = nodes.filter((node) => node.type === 'start');
+    if (startNodes.length === 0) {
+      errors.push(buildError('Workflow must have one Start block', startNodes[0]?.id));
+    } else if (startNodes.length !== 1) {
+      errors.push(buildError('Workflow must have exactly one Start block', startNodes[0]?.id));
+    }
+
+    const endNodes = nodes.filter((node) => node.type === 'end');
+    if (endNodes.length === 0) {
+      errors.push(buildError('Workflow must have one End block', endNodes[0]?.id));
+    } else if (endNodes.length !== 1) {
+      errors.push(buildError('Workflow must have exactly one End block', endNodes[0]?.id));
+    }
+
+    // Build undirected adjacency map from edges to check node connections
+    const adjacency: Record<string, Set<string>> = {};
+    nodes.forEach((node) => (adjacency[node.id] = new Set()));
+    edges.forEach((e) => {
+      if (!adjacency[e.source] || !adjacency[e.target]) return;
+      adjacency[e.source].add(e.target);
+      adjacency[e.target].add(e.source);
+    });
+
+    nodes.forEach((node => {
+      const degree = adjacency[node.id]?.size ?? 0;
+      const requiredConnections = minConnections[node.type as keyof typeof minConnections];
+
+      if (degree === 0) {
+        errors.push(buildError(`${capitalize(node.type)} Node is not connected`, node.id))
+      } else if (degree < requiredConnections) {
+        errors.push(buildError(`${capitalize(node.type)} Node is missing ${requiredConnections - degree} ${pluralize(requiredConnections - degree, 'connection')}`, node.id))
+      }
+    }));
+    return errors;
+    
+  }, [nodes, edges])
+
+  const DEBOUNCE_MS = 300;
+
+  // Debounced validation
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const errors = validateWorkflow();
+      setWorkflowErrors(errors);
+    }, DEBOUNCE_MS);
+
+    return () => clearTimeout(timeout);
+  }, [nodes, edges, validateWorkflow]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -153,7 +198,7 @@ export const WorkflowEditor: React.FC = () => {
 
       let label = '';
       if (sourceNode?.type === 'conditional' && params.sourceHandle) {
-        const conditionalData = sourceNode.data as ConditionalNodeData;
+        const conditionalData = sourceNode.data as unknown as ConditionalNodeData;
         // Find the route label for this handle
         const route = conditionalData.routes?.find((r) => r.id === params.sourceHandle);
         label = route?.label || params.sourceHandle || '';
@@ -253,6 +298,11 @@ export const WorkflowEditor: React.FC = () => {
   }, []);
 
   const handleSave = () => {
+    if (workflowErrors.length > 0) {
+      setShowErrorDialog(true);
+      return;
+    }
+    
     const workflowConfig = {
       nodes: nodes.map((node) => ({
         id: node.id,
@@ -274,8 +324,15 @@ export const WorkflowEditor: React.FC = () => {
     };
 
     console.log('Workflow Configuration:', JSON.stringify(workflowConfig, null, 2));
-
+    
     setShowSaveDialog(true);
+  };
+
+  const handleReset = () => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+    setSelectedNode(null);
+    setWorkflowErrors([]);
   };
 
   return (
@@ -283,11 +340,16 @@ export const WorkflowEditor: React.FC = () => {
       <Card m="4" mb="0">
         <Flex flexGrow="1" justify="between" align="center">
           <Heading as="h2">Workflow Editor</Heading>
-
-          <Button onClick={handleSave}>
-            <Save size={16} />
-            Save Workflow
-          </Button>
+          <Flex gap={"2"} align="center">
+            <Button onClick={handleReset} color='gray'>
+              <RefreshCw size={16} />
+              Reset Workflow
+            </Button>
+            <Button onClick={handleSave}>
+              <Save size={16} />
+              Save Workflow
+            </Button>
+          </Flex> 
         </Flex>
       </Card>
 
@@ -296,18 +358,19 @@ export const WorkflowEditor: React.FC = () => {
         {/* Left Panels */}
         <Flex direction="column" gap="4">
           <BlockPanel onAddBlock={handleAddBlock} />
-          <ValidationPanel errors={validationErrors} />
+          <ValidationPanel errors={workflowErrors} />
         </Flex>
 
         {/* Workflow Canvas */}
         <Box flexGrow="1" style={{ minHeight: '600px' }}>
           <Card style={{ overflow: 'hidden', height: '100%' }}>
+            {/* TODO: show auto syncing and saving status here */}
             {workflowErrors.length > 0 && (
               <Callout.Root color="red" size="1" mb="2">
                 <Callout.Icon>
                   <AlertCircle />
                 </Callout.Icon>
-                <Callout.Text>Workflow Errors: {workflowErrors.join(', ')}</Callout.Text>
+                <Callout.Text>Failed to Save: {workflowErrors.map((err) => err.message).join(', ')}</Callout.Text>
               </Callout.Root>
             )}
             <ReactFlow
@@ -380,6 +443,22 @@ export const WorkflowEditor: React.FC = () => {
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray">
+                Close
+              </Button>
+            </AlertDialog.Cancel>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
+      <AlertDialog.Root open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <AlertDialog.Content maxWidth="450px">
+          <AlertDialog.Title color="red">Error Saving Workflow</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            There was a problem saving your workflow configuration. Check the Errors Sidebar for details and try again.
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="red">
                 Close
               </Button>
             </AlertDialog.Cancel>
@@ -813,7 +892,7 @@ export interface ValidationPanelProps {
  */
 export const ValidationPanel: React.FC<ValidationPanelProps> = ({ errors }) => {
   const errorCount = errors.length;
-
+  console.log('ValidationPanel errors:', errors);
   return (
     <Card style={{ width: '256px', height: '100%' }}>
       <Flex direction="column" gap="3" p="4">
