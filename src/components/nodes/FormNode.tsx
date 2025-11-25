@@ -117,14 +117,17 @@ export const FormNode: React.FC<FormNodeProps> = ({ data, id }) => {
           border: '2px solid white',
         }}
       />
-      
-      <Box 
+
+      <Box
         position="absolute"
         style={{
           bottom: '-20px',
           left: '0px',
-        }}>
-        <Text size="1" weight="light" style={{ opacity: 0.7, color: 'black'}}>{id}</Text>
+        }}
+      >
+        <Text size="1" weight="light" style={{ opacity: 0.7, color: 'black' }}>
+          {id}
+        </Text>
       </Box>
     </Box>
   );
