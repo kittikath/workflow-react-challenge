@@ -147,8 +147,8 @@ Already imported and ready to use:
 
 ## Submission Checklist
 
-- [ ] No TypeScript errors
-- [ ] No console errors
+- [X] No TypeScript errors
+- [X] No console errors
 - [X] All node-level validation rules implemented
 - [X] Workflow-level validation implemented (one Start, one End, proper routing)
 - [X] Auto-save works with 2-second debounce
@@ -168,7 +168,7 @@ Good luck!
 
 ## Features added:
 - Reset Workflow Button next to Save Workflow
-- Added id node_X value to each node
+- Added id node_X value underneath each node
 
 ## If I had more time:
 - Add tests for validation

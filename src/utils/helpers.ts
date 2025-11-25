@@ -5,7 +5,7 @@ export const capitalize = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
-const ADJECTIVES = ['calm', 'fast', 'bold', 'kind', 'neat', 'bright', 'wise', 'cool'];
+const ADJECTIVES = ['calm', 'fast', 'bold', 'kind', 'neat', 'easy', 'wise', 'cool'];
 const NOUNS = ['cat', 'sun', 'tree', 'star', 'bird', 'hill', 'wave', 'leaf'];
 
 const randIndex = (max: number) => {
@@ -18,9 +18,9 @@ const randIndex = (max: number) => {
   }
 };
 
-export const generateReadableId = (separator = '-') => {
+export const generateReadableId = (separator = '_') => {
   const a = ADJECTIVES[randIndex(ADJECTIVES.length)];
   const n = NOUNS[randIndex(NOUNS.length)];
-  const ts = Date.now().toString(36).slice(-4);
+  const ts = Date.now().toString(36).slice(-3);
   return `${a}${separator}${n}${separator}${ts}`.toLowerCase();
 };
