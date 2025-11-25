@@ -61,6 +61,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { useAutoSave } from './hooks/useAutoSave';
 import { SaveFailedDialog } from './dialogs/SaveFailedDialog';
 import { SaveSuccessDialog } from './dialogs/SaveSuccessDialog';
+import { generateReadableId } from '@/utils/helpers';
 
 const nodeTypes = {
   start: StartNode,
@@ -73,8 +74,7 @@ const nodeTypes = {
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
-let nodeId = 0;
-const getId = () => `node_${nodeId++}`;
+const getId = () => `node_${generateReadableId()}`;
 
 const getBlockConfig = (blockType: string): WorkflowNodeData => {
   const configs: Record<string, WorkflowNodeData> = {
@@ -242,7 +242,7 @@ export const WorkflowEditor: React.FC = () => {
     (updater: (newElements: NodeChange[] | EdgeChange[]) => void) =>
       (newElements: NodeChange[] | EdgeChange[]) => {
         updater(newElements);
-        setAutoSaveState('saving')
+        setAutoSaveState('saving');
       },
     []
   );
@@ -383,18 +383,19 @@ export const WorkflowEditor: React.FC = () => {
                 </Callout.Icon>
                 <Callout.Text>
                   {workflowErrors.length > 0 && nodeErrors.length > 0
-                    ? "See the validation panels for workflow and node errors."
+                    ? 'See the validation panels for workflow and node errors.'
                     : workflowErrors.length > 0
-                    ? "See the validation panels for workflow errors."
-                    : "See the validation panels for node errors."}
-                  {' '}
+                      ? 'See the validation panels for workflow errors.'
+                      : 'See the validation panels for node errors.'}{' '}
                 </Callout.Text>
               </Callout.Root>
             ) : (
               <SaveStatusIndicator
                 state={autoSaveState}
                 lastSaved={lastSaved}
-                error={autoSaveState === 'error' ? 'An error occurred during auto-save.' : undefined}
+                error={
+                  autoSaveState === 'error' ? 'An error occurred during auto-save.' : undefined
+                }
               />
             )}
             <ReactFlow

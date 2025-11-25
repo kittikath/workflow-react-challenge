@@ -5,7 +5,7 @@ export const useLocalStorage = <T,>(key: string, initialValue: T) => {
     try {
       if (typeof window === 'undefined') return initialValue;
       const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) as T : initialValue;
+      return item ? (JSON.parse(item) as T) : initialValue;
     } catch {
       return initialValue;
     }
@@ -21,20 +21,16 @@ export const useLocalStorage = <T,>(key: string, initialValue: T) => {
     try {
       const newValue = v instanceof Function ? v(value) : v;
       setValue(newValue);
-      if (typeof window !== 'undefined')
-        window.localStorage.setItem(key, JSON.stringify(newValue));
+      if (typeof window !== 'undefined') window.localStorage.setItem(key, JSON.stringify(newValue));
     } catch {}
   };
 
   const remove = () => {
     try {
-      if (typeof window !== 'undefined')
-        window.localStorage.removeItem(key);
+      if (typeof window !== 'undefined') window.localStorage.removeItem(key);
       setValue(initialValue);
     } catch {}
   };
 
   return [value, setStored, remove] as const;
 };
-
-

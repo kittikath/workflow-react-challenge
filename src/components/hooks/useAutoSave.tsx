@@ -66,7 +66,10 @@ export function useAutoSave({
           setLastSaved(now);
 
           if (savedTimer) window.clearTimeout(savedTimer);
-          savedTimer = window.setTimeout(() => setAutoSaveState('idle'), SAVED_DISPLAY_MS) as unknown as number;
+          savedTimer = window.setTimeout(
+            () => setAutoSaveState('idle'),
+            SAVED_DISPLAY_MS
+          ) as unknown as number;
           minSavingTimer = undefined;
         }, MIN_SAVING_MS);
 
