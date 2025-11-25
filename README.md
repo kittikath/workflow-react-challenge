@@ -149,12 +149,12 @@ Already imported and ready to use:
 
 - [ ] No TypeScript errors
 - [ ] No console errors
-- [ ] All node-level validation rules implemented
-- [ ] Workflow-level validation implemented (one Start, one End, proper routing)
-- [ ] Auto-save works with 2-second debounce
-- [ ] Workflow restores from localStorage
-- [ ] ValidationPanel shows real validation errors
-- [ ] Code follows existing patterns
+- [X] All node-level validation rules implemented
+- [X] Workflow-level validation implemented (one Start, one End, proper routing)
+- [X] Auto-save works with 2-second debounce
+- [X] Workflow restores from localStorage
+- [X] ValidationPanel shows real validation errors
+- [X] Code follows existing patterns
 
 ## Bonus (Optional)
 
@@ -165,3 +165,11 @@ Already imported and ready to use:
 **Reference:** Check `EXAMPLES.md` for code patterns and `src/components/nodes/` for data structures.
 
 Good luck!
+
+## Features added:
+- Reset Workflow Button next to Save Workflow
+- Added id node_X value to each node
+
+## If I had more time:
+- Add tests for validation
+- Use zod for runtime type guarding

@@ -1,6 +1,3 @@
-
-
-
 import React from 'react';
 import { AlertDialog, Button, Flex } from '@radix-ui/themes';
 
@@ -13,14 +10,13 @@ export const SaveFailedDialog: React.FC<SaveFailedDialogProps> = ({
   showErrorDialog,
   setShowErrorDialog,
 }) => {
-
   return (
     <AlertDialog.Root open={showErrorDialog} onOpenChange={setShowErrorDialog}>
       <AlertDialog.Content maxWidth="450px">
         <AlertDialog.Title color="red">Error Saving Workflow</AlertDialog.Title>
         <AlertDialog.Description size="2">
-        There was a problem saving your workflow configuration. Check the Errors Sidebar for
-        details and try again.
+          There was a problem saving your workflow configuration. Check the Errors Sidebar for
+          details and try again.
         </AlertDialog.Description>
         <Flex gap="3" mt="4" justify="end">
           <AlertDialog.Cancel>

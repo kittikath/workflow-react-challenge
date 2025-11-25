@@ -1,8 +1,7 @@
 import React from 'react';
 import { AlertCircle, Check, Loader, RefreshCw } from 'lucide-react';
 import { Callout } from '@radix-ui/themes';
-
-export type AutoSaveState = 'idle' | 'saving' | 'saved' | 'error';
+import { AutoSaveState } from './hooks/useAutoSave';
 
 interface Props {
   state: AutoSaveState;

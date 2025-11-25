@@ -13,7 +13,15 @@ export interface ValidationError {
   nodeId?: string;
 }
 
-export interface NodeErrors {
+export interface NodeError {
+  id: string;
+  nodeId: string;
+  nodeType: string;
+  error: NodeErrorType;
+  message: string; // displays the latest error message for the node
+}
+
+export interface NodeErrorType {
   customName: string;
   url: string;
   fieldToEvaluate: string;
@@ -24,7 +32,7 @@ export interface NodeErrors {
   fieldLabel: string;
 }
 
-export const DEFAULT_NODE_ERRORS: NodeErrors = {
+export const DEFAULT_NODE_ERRORS: NodeErrorType = {
   customName: '',
   url: '',
   fieldToEvaluate: '',
@@ -123,18 +131,20 @@ export const validateWorkflow = (nodes: Node[], edges: Edge[]): ValidationError[
   return errors;
 };
 
-export const validateNodes = (nodes: Node[]): Record<string, NodeErrors> | null => {
+export const validateNodes = (nodes: Node[]): NodeError[] => {
+  const errors: NodeError[] = [];
+
   for (const node of nodes) {
-    const nodeError: NodeErrors = {
-      customName: '',
-      url: '',
-      fieldToEvaluate: '',
-      operator: '',
-      value: '',
-      method: '',
-      fieldName: '',
-      fieldLabel: '',
+    const nodeError: NodeErrorType = {
+      ...DEFAULT_NODE_ERRORS,
     };
+
+    const appendMessage = (key: keyof NodeErrorType, msg: string) => {
+      if (!msg) return;
+      nodeError[key] = nodeError[key] ? `${nodeError[key]} | ${msg}` : msg;
+    };
+
+    let nodeHasError = false;
 
     if (!node.data || Object.keys(node.data).length === 0) {
       continue;
@@ -145,48 +155,50 @@ export const validateNodes = (nodes: Node[]): Record<string, NodeErrors> | null 
 
       const error = validateField('customName', data.customName ?? '', { nodeType: node.type });
       if (error) {
-        nodeError.customName = error;
-        return { [node.id]: nodeError };
+        appendMessage('customName', error);
+        nodeHasError = true;
       }
     }
 
     if (node.type === 'form') {
       const data = node.data as unknown as FormNodeData;
       if (!data.fields || data.fields.length === 0) {
-        nodeError.fieldName = 'At least one field is required';
-        return { [node.id]: nodeError };
-      }
-      for (let i = 0; i < data.fields.length; i++) {
-        const field = data.fields[i];
-        const fieldNameError = validateField('fieldName', field.name || '', {
-          nodeType: node.type,
-        });
-        if (fieldNameError) {
-          nodeError[`fieldName_${i}`] = fieldNameError;
-          return { [node.id]: nodeError };
-        }
+        appendMessage('fieldName', 'At least one field is required');
+        nodeHasError = true;
+      } else {
+        for (let i = 0; i < data.fields.length; i++) {
+          const field = data.fields[i];
+          const fieldNameError = validateField('fieldName', field.name || '', {
+            nodeType: node.type,
+          });
+          if (fieldNameError) {
+            appendMessage('fieldName', `Field ${i + 1} name: ${fieldNameError}`);
+            nodeHasError = true;
+          }
 
-        const fieldLabelError = validateField('fieldLabel', field.label || '', {
-          nodeType: node.type,
-        });
-        if (fieldLabelError) {
-          nodeError[`fieldLabel_${i}`] = fieldLabelError;
-          return { [node.id]: nodeError };
+          const fieldLabelError = validateField('fieldLabel', field.label || '', {
+            nodeType: node.type,
+          });
+          if (fieldLabelError) {
+            appendMessage('fieldLabel', `Field ${i + 1} label: ${fieldLabelError}`);
+            nodeHasError = true;
+          }
         }
       }
     } else if (node.type === 'conditional') {
+      const data = node.data as unknown as ConditionalNodeData;
       const fieldToEvaluateError = validateField('fieldToEvaluate', data.fieldToEvaluate || '', {
         nodeType: node.type,
       });
       if (fieldToEvaluateError) {
-        nodeError.fieldToEvaluate = fieldToEvaluateError;
-        return { [node.id]: nodeError };
+        appendMessage('fieldToEvaluate', fieldToEvaluateError);
+        nodeHasError = true;
       }
 
       const operatorError = validateField('operator', data.operator || '', { nodeType: node.type });
       if (operatorError) {
-        nodeError.operator = operatorError;
-        return { [node.id]: nodeError };
+        appendMessage('operator', operatorError);
+        nodeHasError = true;
       }
 
       const valueError = validateField('value', data.value || '', {
@@ -194,25 +206,39 @@ export const validateNodes = (nodes: Node[]): Record<string, NodeErrors> | null 
         operator: data.operator,
       });
       if (valueError) {
-        nodeError.value = valueError;
-        return { [node.id]: nodeError };
+        appendMessage('value', valueError);
+        nodeHasError = true;
       }
     } else if (node.type === 'api') {
+      const data = node.data as unknown as ApiNodeData;
       const urlError = validateField('url', data.url || '', { nodeType: node.type });
       if (urlError) {
-        nodeError.url = urlError;
-        return { [node.id]: nodeError };
+        appendMessage('url', urlError);
+        nodeHasError = true;
       }
 
       const methodError = validateField('method', data.method || '', { nodeType: node.type });
       if (methodError) {
-        nodeError.method = methodError;
-        return { [node.id]: nodeError };
+        appendMessage('method', methodError);
+        nodeHasError = true;
       }
+    }
+
+    if (nodeHasError) {
+      const msgs = Object.values(nodeError).filter(Boolean);
+      const primaryMessage = msgs.length > 0 ? (msgs[0] as string) : 'Node Configuration Error';
+
+      errors.push({
+        id: generateErrorId(`node-error-${node.id}`),
+        nodeId: node.id,
+        nodeType: node.type,
+        error: nodeError,
+        message: primaryMessage,
+      });
     }
   }
 
-  return null; // no errors found in any node
+  return errors;
 };
 
 export const validateOnBlur = (
