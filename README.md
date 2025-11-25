@@ -171,7 +171,8 @@ Good luck!
 - Added id node_X value underneath each node. This makes it easier to see which error corresponds to what
 - Validated nodes onBlur in the form. The errors are placed underneath so that the user 
 can validate as they go.
+- I found that having 'Backspace' to remove nodes wasn't helpful when trying to fix form names for Nodes. I've reverted it to contain Backspace and Delete as the shortcuts.
 
 ## If I had more time:
-- Add tests for validation
+- Add validations.tests.ts for automatic testing
 - Use zod for runtime type guarding

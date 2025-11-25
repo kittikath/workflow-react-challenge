@@ -138,7 +138,7 @@ export const WorkflowEditor: React.FC = () => {
 
   // Auto-save persistence
   const AUTOSAVED_WORKFLOW = 'workflow_autosave';
-  const [storedWorkflow, setStoredWorkflow, removeStoredWorkflow] =
+  const [storedWorkflow, _, removeStoredWorkflow] =
     useLocalStorage<AutosavedWorkflow | null>(AUTOSAVED_WORKFLOW, null);
 
   const [workflowErrors, setWorkflowErrors] = useState<ValidationError[]>([]);
@@ -253,8 +253,7 @@ export const WorkflowEditor: React.FC = () => {
   // Keyboard shortcuts for deleting selected node
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // if ((event.key === 'Delete' || event.key === 'Backspace') && selectedNode) {
-      if (event.key === 'Delete' && selectedNode) {
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedNode) {
         // Prevent default behavior (like navigating back) when deleting
         event.preventDefault();
         deleteNode(selectedNode.id);

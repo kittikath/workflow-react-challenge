@@ -13,14 +13,14 @@ interface UseAutoSaveProps {
   debounceMs?: number;
 }
 
-export function useAutoSave({
+export const useAutoSave = ({
   nodes,
   edges,
   workflowErrors,
   nodeErrors,
   storageKey,
   debounceMs = 2000,
-}: UseAutoSaveProps) {
+}: UseAutoSaveProps) => {
   const [autoSaveState, setAutoSaveState] = useState<AutoSaveState>('idle');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const isFirstRender = useRef(true);
