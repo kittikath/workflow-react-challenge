@@ -166,9 +166,11 @@ Already imported and ready to use:
 
 Good luck!
 
-## Features added:
-- Reset Workflow Button next to Save Workflow
-- Added id node_X value underneath each node
+## Features added + Considerations made:
+- Added a Reset Workflow Button so that you can reset the workflow and local storage without having to discard on load.
+- Added id node_X value underneath each node. This makes it easier to see which error corresponds to what
+- Validated nodes onBlur in the form. The errors are placed underneath so that the user 
+can validate as they go.
 
 ## If I had more time:
 - Add tests for validation
